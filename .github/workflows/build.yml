@@ -13,15 +13,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Incluindo os três principais SOs para cobertura total
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
+        cache: 'pip' # Otimiza o tempo de build em pushes subsequentes
 
     - name: Install dependencies
       run: |
@@ -30,14 +33,24 @@ jobs:
         pip install pyinstaller
 
     - name: Ensure models dir exists
+      # Criamos a pasta para evitar erro no --add-data caso ela não esteja no git
       run: mkdir -p models
 
     - name: Build with PyInstaller
+      shell: bash
       run: |
-        pyinstaller --noconfirm --onedir --windowed --add-data "models:models" main.py
+        # Gerando a pasta com o nome do produto
+        # --onedir: cria uma pasta com o executável e dependências (melhor para debug e apps pesados)
+        # --windowed: evita que o console abra ao iniciar o app
+        pyinstaller --noconfirm --onedir --windowed \
+          --add-data "models:models" \
+          --name "AI-Image-Inspector" \
+          main.py
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: AI-Image-Inspector-${{ runner.os }}
-        path: dist/main
+        # Capturamos a pasta inteira dentro de dist para garantir que o .exe (Win) 
+        # ou o binário (Unix) sejam incluídos com suas DLLs/Libs
+        path: dist/AI-Image-Inspector/
