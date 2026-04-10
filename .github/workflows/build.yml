@@ -41,6 +41,7 @@ jobs:
       run: |
         pyinstaller --noconfirm --onedir --windowed \
           --add-data "models:models" \
+          --hidden-import "PIL._tkinter_finder" \
           --name "AI-Image-Inspector" \
           main.py
 
